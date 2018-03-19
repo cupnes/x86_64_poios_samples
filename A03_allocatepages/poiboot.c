@@ -15,6 +15,51 @@
 /* #define ALLOCATION_SIZE	209715200	/\* 200MB *\/ */
 #define ALLOCATION_PAGES	51200	/* 200MB */
 
+/*
+** STARTED UEFI: PageTable設定の動確
+QEMUの場合は   0x0000 0100 0000 以降、
+lenovoの場合は 0x0001 0000 0000 以降を
+0x80000000 00000000 へマップする <- このアドレスで良い?
+
+kernel_arg1(ST) = 0x000000007FA43F18    size = 0x0000000000000068
+kernel_arg2(fb) = 0x0000000000406160    size = 0x0000000000000018
+
+kernel_arg1(ST) = 0x000000007FA43F18    size = 0x0000000000000068
+kernel_arg2(fb) = 0x0000000000406160    size = 0x0000000000000018
+
+kernel_arg1(ST) = 0x000000007FA43F18    size = 0x0000000000000068
+kernel_arg2(fb) = 0x0000000000406160    size = 0x0000000000000018
+fb.base = 0x0000000080000000    size = 0x00000000001D4C00
+
+kernel_arg1(ST) = 0x000000007FA43F18    size = 0x0000000000000068
+kernel_arg2(fb) = 0x0000000000406160    size = 0x0000000000000018
+fb.base = 0x0000000080000000    size = 0x00000000001D4C00
+
+echo 'ibase=16;1D4C00' | bc
+=> (/ 1920000.0 1024.0 1024.0)1.8310546875 MB
+=> (/ 1920000.0 4096)468.75
+
+=> runtimeで変化はしない模様
+
+mapしなければならない資源
+- kernel_arg1(ST)
+- kernel_arg2(fb)
+- fb自身の領域
+- kernel.bin, apps.img, stack
+- 自分自身のコードとデータ(EfiLoaderCode, EfiLoaderData)
+
+QEMUの場合、
+- kernel_arg2(fb)		: 0x0000000000406160	(24 byte  => 1     page)
+- kernel_arg1(ST)		: 0x000000007FA43F18	(104 byte => 1     page)
+- fb自身の領域			: 0x0000000080000000	(1.83 MB  => 469   pages)
+- kernel.bin, apps.img, stack	: 好きな所		(200 MB程 => 51200 pages)
+
+(* 200 1024 1024)209715200
+(/ 209715200.0 4096)51200.0
+
+200MB = C800000
+*/
+
 void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 {
 	unsigned long long status;
