@@ -60,6 +60,14 @@ QEMUの場合、
 200MB = C800000
 */
 
+#define current_text_addr() \
+	({ void *pc; __asm__("movq $1f,%0\n1:":"=g" (pc)); pc; })
+
+#define current_sp() ({ void *sp; __asm__("movq %%rsp, %0" : "=r" (sp) : ); sp; })
+#define current_bp() ({ unsigned long bp; __asm__("movq %%rbp, %0" : "=r" (bp) : ); bp; })
+
+volatile unsigned long long g_var;
+
 void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 {
 	unsigned long long status;
@@ -76,6 +84,57 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 	efi_init(SystemTable);
 
+	unsigned long long pc = (unsigned long long)current_text_addr();
+	unsigned long long sp = (unsigned long long)current_sp();
+	puts(L"pc=");
+	puth(pc, 16);
+	puts(L" ");
+	puts(L"sp=");
+	puth(sp, 16);
+	puts(L"\r\n");
+
+	g_var = 0xbeefcafebabefee1;
+	unsigned short *const_str = KERNEL_FILE_NAME;
+	puts(L"g_var=");
+	puth((unsigned long long)&g_var, 16);
+	puts(L" ");
+	puts(L"const_str=");
+	puth((unsigned long long)const_str, 16);
+	puts(L"\r\n");
+
+	puts(L"mem_desc=");
+	puth((unsigned long long)mem_desc, 16);
+	puts(L"\r\n");
+
+	init_memmap();
+
+	puts(L"dump_memmap_pa(pc)\r\n");
+	dump_memmap_pa(pc);
+	puts(L"dump_memmap_pa(sp)\r\n");
+	dump_memmap_pa(sp);
+
+	puts(L"dump_memmap_pa(&g_var)\r\n");
+	dump_memmap_pa((unsigned long long)&g_var);
+	puts(L"dump_memmap_pa(const_str)\r\n");
+	dump_memmap_pa((unsigned long long)const_str);
+
+	puts(L"dump_memmap_pa(mem_desc)\r\n");
+	dump_memmap_pa((unsigned long long)mem_desc);
+
+	puts(L"dump_memmap_type(EfiLoaderCode)\r\n");
+	dump_memmap_type(EfiLoaderCode);
+	puts(L"dump_memmap_type(EfiLoaderData)\r\n");
+	dump_memmap_type(EfiLoaderData);
+	/* puts(L"dump_memmap_type(EfiBootServicesCode)\r\n"); */
+	/* dump_memmap_type(EfiBootServicesCode); */
+	/* puts(L"dump_memmap_type(EfiBootServicesData)\r\n"); */
+	/* dump_memmap_type(EfiBootServicesData); */
+
+	puts(L"dump_available_memap()\r\n");
+	dump_available_memmap();
+
+	while (TRUE);
+
 	puts(L"Starting OS5 UEFI bootloader ...\r\n");
 
 	/* unsigned long long allocation_addr; */
@@ -85,11 +144,6 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	/* assert(status, L"AllocatePages"); */
 	/* puth(allocation_addr, 16); */
 	/* puts(L"\r\n"); */
-
-	/* while (1); */
-
-	/* init_memmap(); */
-	/* dump_available_memmap(); */
 
 	/* while (1); */
 

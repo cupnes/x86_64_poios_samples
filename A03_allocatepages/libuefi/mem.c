@@ -2,7 +2,7 @@
 #include <common.h>
 #include <mem.h>
 
-#define MEM_DESC_SIZE	4800
+/* #define MEM_DESC_SIZE	4800 */
 #define DUMP_MEM_THD	10485760	/* 10MB */
 
 unsigned char mem_desc[MEM_DESC_SIZE];
@@ -46,6 +46,53 @@ void dump_available_memmap(void)
 		     || p->Type == EfiBootServicesData
 		     || p->Type == EfiConventionalMemory)
 		    && (p->NumberOfPages * PAGE_SIZE >= DUMP_MEM_THD)) {
+			puth(p->Type, 2);
+			putc(L' ');
+			puth(p->PhysicalStart, 16);
+			putc(L' ');
+			puth(p->NumberOfPages * PAGE_SIZE, 16);
+			putc(L' ');
+			puth(p->Attribute, 16);
+			puts(L"\r\n");
+		}
+
+		p = (struct EFI_MEMORY_DESCRIPTOR *)(
+			(unsigned char *)p + mem_desc_unit_size);
+	}
+}
+
+void dump_memmap_type(unsigned int type)
+{
+	struct EFI_MEMORY_DESCRIPTOR *p =
+		(struct EFI_MEMORY_DESCRIPTOR *)mem_desc;
+	unsigned int i;
+
+	for (i = 0; i < mem_desc_num; i++) {
+		if (p->Type == type) {
+			puth(p->Type, 2);
+			putc(L' ');
+			puth(p->PhysicalStart, 16);
+			putc(L' ');
+			puth(p->NumberOfPages * PAGE_SIZE, 16);
+			putc(L' ');
+			puth(p->Attribute, 16);
+			puts(L"\r\n");
+		}
+
+		p = (struct EFI_MEMORY_DESCRIPTOR *)(
+			(unsigned char *)p + mem_desc_unit_size);
+	}
+}
+
+void dump_memmap_pa(unsigned long long pa)
+{
+	struct EFI_MEMORY_DESCRIPTOR *p =
+		(struct EFI_MEMORY_DESCRIPTOR *)mem_desc;
+	unsigned int i;
+
+	for (i = 0; i < mem_desc_num; i++) {
+		if ((p->PhysicalStart <= pa)
+		    && (pa < (p->PhysicalStart + (p->NumberOfPages * PAGE_SIZE)))) {
 			puth(p->Type, 2);
 			putc(L' ');
 			puth(p->PhysicalStart, 16);
