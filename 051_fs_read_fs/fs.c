@@ -1,7 +1,7 @@
 #include <fs.h>
 #include <common.h>
 
-#define FS_START_ADDR	0x0000000000200000
+#define FS_START_ADDR	0x0000000100000000
 #define END_OF_FS	0x00
 
 struct file *open(char *name)

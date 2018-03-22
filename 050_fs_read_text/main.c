@@ -5,12 +5,12 @@
 #include <kbc.h>
 #include <fbcon.h>
 
-#define APPS_START	0x0000000000200000
+#define APPS_START	0x0000000100000000
 
-void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *fb)
+void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *_fb)
 {
 	/* フレームバッファ周りの初期化 */
-	fb_init(fb);
+	fb_init(_fb);
 	set_fg(255, 255, 255);
 	set_bg(0, 70, 250);
 	clear_screen();

@@ -6,10 +6,10 @@
 #include <fbcon.h>
 #include <fs.h>
 
-void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *fb)
+void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *_fb)
 {
 	/* フレームバッファ周りの初期化 */
-	fb_init(fb);
+	fb_init(_fb);
 	set_fg(255, 255, 255);
 	set_bg(0, 70, 250);
 	clear_screen();

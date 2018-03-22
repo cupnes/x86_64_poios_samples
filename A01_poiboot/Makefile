@@ -1,7 +1,7 @@
 CC      = x86_64-w64-mingw32-gcc
 OBJCOPY = x86_64-w64-mingw32-objcopy
 CFLAGS  = -Wall -Wextra
-CFLAGS += -nostdinc -nostdlib -fno-builtin
+CFLAGS += -nostdinc -nostdlib -fno-builtin -fno-common
 CFLAGS += -Wl,--subsystem,10
 
 poiboot.efi: poiboot.o libuefi/libuefi.a

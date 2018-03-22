@@ -14,7 +14,7 @@ $(TARGET): $(OBJS)
 
 run: $(TARGET)
 	cp $(TARGET) ../fs/
-	qemu-system-x86_64 -bios OVMF.fd -hda fat:../fs
+	qemu-system-x86_64 -m 4G -bios OVMF.fd -hda fat:../fs
 
 clean:
 	rm -f *~ *.o *.map $(TARGET) include/*~
