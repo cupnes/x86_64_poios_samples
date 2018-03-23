@@ -4,6 +4,8 @@
 #include <fb.h>
 #include <file.h>
 
+#define CONF_FILE_NAME	L"poiboot.conf"
+
 #define KERNEL_FILE_NAME	L"kernel.bin"
 #define APPS_FILE_NAME	L"apps.img"
 
@@ -18,8 +20,12 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 {
 	unsigned long long status;
 	struct EFI_FILE_PROTOCOL *root;
+	struct EFI_FILE_PROTOCOL *file_conf;
 	struct EFI_FILE_PROTOCOL *file_kernel;
 	struct EFI_FILE_PROTOCOL *file_apps;
+	unsigned long long kernel_start;
+	unsigned long long stack_base;
+	unsigned long long apps_start;
 	unsigned long long kernel_size;
 	unsigned long long apps_size;
 	unsigned char *p;
@@ -32,8 +38,29 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 	puts(L"Starting OS5 UEFI bootloader ...\r\n");
 
+	puth(hexstrtoull("beefcafebabefee1"), 16);
+	while (1);
+
 	status = SFSP->OpenVolume(SFSP, &root);
 	assert(status, L"SFSP->OpenVolume");
+
+
+	/* load config file */
+	status = root->Open(
+		root, &file_conf, CONF_FILE_NAME, EFI_FILE_MODE_READ, 0);
+	assert(status, L"root->Open(conf)");
+
+	struct config {
+		char kernel_start[17];
+		char apps_start[17];
+	} conf;
+	unsigned long long conf_size = sizeof(conf);
+	status = file_conf->Read(file_conf, &conf_size, (void *)&conf);
+	kernel_start = hexstrtoull(conf.kernel_start);
+	stack_base = kernel_start + (1 * MB);
+	apps_start = hexstrtoull(conf.apps_start);
+
+	file_conf->Close(file_conf);
 
 
 	/* load the kernel */

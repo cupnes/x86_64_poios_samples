@@ -105,6 +105,24 @@ unsigned long long strlen(unsigned short *str)
 	return len;
 }
 
+unsigned long long hexstrtoull(char *str)
+{
+	unsigned long long res = 0;
+
+	for (; *str != '\0'; str++) {
+		unsigned char v;
+		if (('0' <= *str) && (*str <= '9'))
+			v = *str - '0';
+		else if (('A' <= *str) && (*str <= 'Z'))
+			v = *str - 'A' + 0xA;
+		else
+			v = *str - 'a' + 0xa;
+		res = (res << 4) + v;
+	}
+
+	return res;
+}
+
 unsigned char check_warn_error(unsigned long long status, unsigned short *message)
 {
 	if (status) {
