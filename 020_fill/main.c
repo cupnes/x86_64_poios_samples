@@ -16,7 +16,8 @@ struct framebuffer {
 	unsigned int vr;
 };
 
-void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *fb)
+void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *fb,
+		  void *_fs_start __attribute__ ((unused)))
 {
 	unsigned int x, y;
 	struct pixelformat *p;

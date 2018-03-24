@@ -4,7 +4,8 @@
 #include <fb.h>
 #include <kbc.h>
 
-void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *_fb)
+void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *_fb,
+		  void *_fs_start __attribute__ ((unused)))
 {
 	/* フレームバッファ周りの初期化 */
 	fb_init(_fb);

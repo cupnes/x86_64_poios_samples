@@ -1,12 +1,18 @@
 #include <fs.h>
 #include <common.h>
 
-#define FS_START_ADDR	0x0000000100000000
 #define END_OF_FS	0x00
+
+struct file *fs_start;
+
+void fs_init(void *_fs_start)
+{
+	fs_start = _fs_start;
+}
 
 struct file *open(char *name)
 {
-	struct file *f = (struct file *)FS_START_ADDR;
+	struct file *f = fs_start;
 	while (f->name[0] != END_OF_FS) {
 		if (!strcmp(f->name, name))
 			return f;

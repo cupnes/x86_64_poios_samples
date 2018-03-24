@@ -5,9 +5,8 @@
 #include <kbc.h>
 #include <fbcon.h>
 
-#define APPS_START	0x0000000100000000
-
-void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *_fb)
+void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *_fb,
+		  void *_fs_start)
 {
 	/* フレームバッファ周りの初期化 */
 	fb_init(_fb);
@@ -27,7 +26,7 @@ void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *_fb)
 	enable_cpu_intr();
 
 	/* apps.img(テキストファイル)を読む */
-	char *hello_str = (char *)APPS_START;
+	char *hello_str = (char *)_fs_start;
 	puts(hello_str);
 
 	/* haltして待つ */
