@@ -38,20 +38,6 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 	puts(L"Starting OS5 UEFI bootloader ...\r\n");
 
-	puth(hexstrtoull("beefcafebabefee1"), 16);
-	puts(L"\r\n");
-	puth(hexstrtoull("3456789ABCDEFGHI"), 16);
-	puts(L"\r\n");
-	puth(hexstrtoull("hogehogeo"), 16);
-	puts(L"\r\n");
-	puth(hexstrtoull("013abcdefg"), 16);
-	puts(L"\r\n");
-	puth(hexstrtoull("013ab\ncdefg"), 16);
-	puts(L"\r\n");
-	puth(hexstrtoull("beefcafebabefee1012"), 16);
-	puts(L"\r\n");
-	while (1);
-
 	status = SFSP->OpenVolume(SFSP, &root);
 	assert(status, L"SFSP->OpenVolume");
 
@@ -59,7 +45,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	/* load config file */
 	status = root->Open(
 		root, &file_conf, CONF_FILE_NAME, EFI_FILE_MODE_READ, 0);
-	assert(status, L"root->Open(conf)");
+	assert(status, L"Can't open config file.");
 
 	struct config {
 		char kernel_start[17];
@@ -72,6 +58,21 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	apps_start = hexstrtoull(conf.apps_start);
 
 	file_conf->Close(file_conf);
+
+	puth(kernel_start, 16);
+	if (kernel_start == KERNEL_START)
+		puts(L"  OK");
+	puts(L"\r\n");
+	puth(stack_base, 16);
+	if (stack_base == STACK_BASE)
+		puts(L"  OK");
+	puts(L"\r\n");
+	puth(apps_start, 16);
+	if (apps_start == APPS_START)
+		puts(L"  OK");
+	puts(L"\r\n");
+
+	while (1);
 
 
 	/* load the kernel */
