@@ -27,6 +27,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	unsigned int i;
 	unsigned long long kernel_arg1;
 	unsigned long long kernel_arg2;
+	unsigned long long kernel_arg3;
 	unsigned char has_apps = TRUE;
 
 	efi_init(SystemTable);
@@ -117,12 +118,16 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	kernel_arg1 = (unsigned long long)ST;
 	init_fb();
 	kernel_arg2 = (unsigned long long)&fb;
+	kernel_arg3 = apps_start;
 
 	puts(L"kernel_arg1 = 0x");
 	puth(kernel_arg1, 16);
 	puts(L"\r\n");
 	puts(L"kernel_arg2 = 0x");
 	puth(kernel_arg2, 16);
+	puts(L"\r\n");
+	puts(L"kernel_arg3 = 0x");
+	puth(kernel_arg3, 16);
 	puts(L"\r\n");
 	puts(L"stack_base = 0x");
 	puth(stack_base, 16);
@@ -131,11 +136,13 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	exit_boot_services(ImageHandle);
 
 	unsigned long long _sb = stack_base, _ks = kernel_start;
-	__asm__ ("	mov	%0, %%rsi\n"
-		 "	mov	%1, %%rdi\n"
-		 "	mov	%2, %%rsp\n"
-		 "	jmp	*%3\n"
-		 ::"r"(kernel_arg2), "r"(kernel_arg1), "r"(_sb), "r"(_ks));
+	__asm__ ("	mov	%0, %%rdx\n"
+		 "	mov	%1, %%rsi\n"
+		 "	mov	%2, %%rdi\n"
+		 "	mov	%3, %%rsp\n"
+		 "	jmp	*%4\n"
+		 ::"m"(kernel_arg3), "m"(kernel_arg2), "m"(kernel_arg1),
+		  "m"(_sb), "m"(_ks));
 
 	while (TRUE);
 }
