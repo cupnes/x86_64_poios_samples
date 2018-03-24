@@ -105,18 +105,27 @@ unsigned long long strlen(unsigned short *str)
 	return len;
 }
 
+int hexchartoint(char ch)
+{
+	if (('0' <= ch) && (ch <= '9'))
+		return ch - '0';
+	if (('A' <= ch) && (ch <= 'F'))
+		return ch - 'A' + 0xA;
+	if (('a' <= ch) && (ch <= 'f'))
+		return ch - 'a' + 0xa;
+
+	return -1;
+}
+
 unsigned long long hexstrtoull(char *str)
 {
 	unsigned long long res = 0;
+	unsigned char digit_num;
 
-	for (; *str != '\0'; str++) {
-		unsigned char v;
-		if (('0' <= *str) && (*str <= '9'))
-			v = *str - '0';
-		else if (('A' <= *str) && (*str <= 'Z'))
-			v = *str - 'A' + 0xA;
-		else
-			v = *str - 'a' + 0xa;
+	for (digit_num = 0; digit_num < 16; digit_num++) {
+		int v = hexchartoint(*str++);
+		if (v < 0)
+			break;
 		res = (res << 4) + v;
 	}
 

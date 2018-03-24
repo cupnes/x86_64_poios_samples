@@ -39,6 +39,17 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	puts(L"Starting OS5 UEFI bootloader ...\r\n");
 
 	puth(hexstrtoull("beefcafebabefee1"), 16);
+	puts(L"\r\n");
+	puth(hexstrtoull("3456789ABCDEFGHI"), 16);
+	puts(L"\r\n");
+	puth(hexstrtoull("hogehogeo"), 16);
+	puts(L"\r\n");
+	puth(hexstrtoull("013abcdefg"), 16);
+	puts(L"\r\n");
+	puth(hexstrtoull("013ab\ncdefg"), 16);
+	puts(L"\r\n");
+	puth(hexstrtoull("beefcafebabefee1012"), 16);
+	puts(L"\r\n");
 	while (1);
 
 	status = SFSP->OpenVolume(SFSP, &root);
