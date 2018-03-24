@@ -11,11 +11,6 @@
 
 #define MB		1048576	/* 1024 * 1024 */
 
-#define KERNEL_START	0x0000000000110000
-#define STACK_BASE	(KERNEL_START + (1 * MB))
-	/* STACK_BASEはスタックの底のアドレス(上へ伸びる) */
-#define APPS_START	0x0000000100000000
-
 void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 {
 	unsigned long long status;
@@ -54,25 +49,10 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	unsigned long long conf_size = sizeof(conf);
 	status = file_conf->Read(file_conf, &conf_size, (void *)&conf);
 	kernel_start = hexstrtoull(conf.kernel_start);
-	stack_base = kernel_start + (1 * MB);
+	stack_base = kernel_start + (1 * MB);	/* stack_baseはスタックの底のアドレス(上へ伸びる) */
 	apps_start = hexstrtoull(conf.apps_start);
 
 	file_conf->Close(file_conf);
-
-	puth(kernel_start, 16);
-	if (kernel_start == KERNEL_START)
-		puts(L"  OK");
-	puts(L"\r\n");
-	puth(stack_base, 16);
-	if (stack_base == STACK_BASE)
-		puts(L"  OK");
-	puts(L"\r\n");
-	puth(apps_start, 16);
-	if (apps_start == APPS_START)
-		puts(L"  OK");
-	puts(L"\r\n");
-
-	while (1);
 
 
 	/* load the kernel */
@@ -92,13 +72,13 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 	kernel_size -= sizeof(head);
 	status = file_kernel->Read(file_kernel, &kernel_size,
-				   (void *)KERNEL_START);
+				   (void *)kernel_start);
 	assert(status, L"file_kernel->Read(body)");
 
 	ST->BootServices->SetMem(head.bss_start, head.bss_size, 0);
 
 	puts(L"loaded kernel(first 8 bytes): ");
-	p = (unsigned char *)KERNEL_START;
+	p = (unsigned char *)kernel_start;
 	for (i = 0; i < 8; i++) {
 		puth(*p++, 2);
 		putc(L' ');
@@ -119,11 +99,11 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	if (has_apps) {
 		apps_size = get_file_size(file_apps);
 
-		status = file_apps->Read(file_apps, &apps_size, (void *)APPS_START);
+		status = file_apps->Read(file_apps, &apps_size, (void *)apps_start);
 		assert(status, L"file_apps->Read");
 
 		puts(L"loaded apps(first 8 bytes): ");
-		p = (unsigned char *)APPS_START;
+		p = (unsigned char *)apps_start;
 		for (i = 0; i < 8; i++) {
 			puth(*p++, 2);
 			putc(L' ');
@@ -145,12 +125,12 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	puth(kernel_arg2, 16);
 	puts(L"\r\n");
 	puts(L"stack_base = 0x");
-	puth(STACK_BASE, 16);
+	puth(stack_base, 16);
 	puts(L"\r\n");
 
 	exit_boot_services(ImageHandle);
 
-	unsigned long long _sb = STACK_BASE, _ks = KERNEL_START;
+	unsigned long long _sb = stack_base, _ks = kernel_start;
 	__asm__ ("	mov	%0, %%rsi\n"
 		 "	mov	%1, %%rdi\n"
 		 "	mov	%2, %%rsp\n"
