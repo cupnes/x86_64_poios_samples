@@ -9,6 +9,7 @@ struct file {
 	unsigned char data[0];
 };
 
+void fs_init(void *_fs_start);
 struct file *open(char *name);
 unsigned long long get_files(struct file *files[]);
 
