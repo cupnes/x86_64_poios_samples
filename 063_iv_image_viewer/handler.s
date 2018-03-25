@@ -1,6 +1,13 @@
 	.global default_handler
 default_handler:
-	jmp	default_handler
+	push	%rax
+	push	%rcx
+	push	%rdx
+	push	%rbx
+	push	%rbp
+	push	%rsi
+	push	%rdi
+	call	do_default_interrupt
 
 	.global	kbc_handler
 kbc_handler:
