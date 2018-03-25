@@ -2,6 +2,8 @@
 #include <common.h>
 #include <file.h>
 
+#define SAFETY_READ_UNIT	16384	/* 16KB */
+
 struct FILE file_list[MAX_FILE_NUM];
 
 unsigned long long get_file_size(struct EFI_FILE_PROTOCOL *file)
@@ -18,4 +20,24 @@ unsigned long long get_file_size(struct EFI_FILE_PROTOCOL *file)
 	fi_ptr = (struct EFI_FILE_INFO *)fi_buf;
 
 	return fi_ptr->FileSize;
+}
+
+void safety_file_read(struct EFI_FILE_PROTOCOL *src, void *dst,
+		      unsigned long long size)
+{
+	unsigned long long status;
+
+	unsigned char *d = dst;
+	while (size > SAFETY_READ_UNIT) {
+		unsigned long long unit = SAFETY_READ_UNIT;
+		status = src->Read(src, &unit, (void *)d);
+		assert(status, L"safety_read");
+		d += unit;
+		size -= unit;
+	}
+
+	if (size > 0) {
+		status = src->Read(src, &size, (void *)d);
+		assert(status, L"safety_read");
+	}
 }
