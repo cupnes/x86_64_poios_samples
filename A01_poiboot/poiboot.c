@@ -17,10 +17,6 @@ void put_param(unsigned short *name, unsigned long long val);
 void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 {
 	unsigned long long status;
-	struct EFI_FILE_PROTOCOL *file_apps;
-	unsigned long long kernel_arg1;
-	unsigned long long kernel_arg2;
-	unsigned long long kernel_arg3;
 	unsigned char has_apps = TRUE;
 
 	efi_init(SystemTable);
@@ -87,10 +83,10 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 	ST->BootServices->SetMem(head.bss_start, head.bss_size, 0);
 
-	puts(L"kernel body(first 16 bytes): 0x");
+	puts(L"kernel body first 16 bytes: 0x");
 	put_n_bytes((unsigned char *)kernel_start, 16);
 	puts(L"\r\n");
-	puts(L"kernel body(last 16 bytes): 0x");
+	puts(L"kernel body last 16 bytes: 0x");
 	unsigned char *kernel_last =
 		(unsigned char *)(kernel_start + kernel_size - 16);
 	put_n_bytes(kernel_last, 16);
@@ -98,6 +94,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 
 	/* load the applications */
+	struct EFI_FILE_PROTOCOL *file_apps;
 	status = root->Open(
 		root, &file_apps, APPS_FILE_NAME, EFI_FILE_MODE_READ, 0);
 	if (!check_warn_error(status, L"root->Open(apps)")) {
@@ -107,37 +104,35 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 	if (has_apps) {
 		unsigned long long apps_size = get_file_size(file_apps);
+		put_param(L"apps_size", apps_size);
+
 		puts(L"load apps ... ");
 		safety_file_read(file_apps, (void *)apps_start, apps_size);
 		puts(L"done\r\n");
 		file_apps->Close(file_apps);
 
-		puts(L"loaded apps(first 16 bytes): ");
+		puts(L"apps first 16 bytes: 0x");
 		put_n_bytes((unsigned char *)apps_start, 16);
+		puts(L"\r\n");
+		puts(L"apps last 16 bytes: 0x");
+		unsigned char *apps_last =
+			(unsigned char *)(apps_start + apps_size - 16);
+		put_n_bytes(apps_last, 16);
 		puts(L"\r\n");
 	}
 
 
-	kernel_arg1 = (unsigned long long)ST;
+	unsigned long long kernel_arg1 = (unsigned long long)ST;
+	put_param(L"kernel_arg1", kernel_arg1);
 	init_fb();
-	kernel_arg2 = (unsigned long long)&fb;
+	unsigned long long kernel_arg2 = (unsigned long long)&fb;
+	put_param(L"kernel_arg2", kernel_arg2);
+	unsigned long long kernel_arg3;
 	if (has_apps == TRUE)
 		kernel_arg3 = apps_start;
 	else
 		kernel_arg3 = 0;
-
-	puts(L"kernel_arg1 = 0x");
-	puth(kernel_arg1, 16);
-	puts(L"\r\n");
-	puts(L"kernel_arg2 = 0x");
-	puth(kernel_arg2, 16);
-	puts(L"\r\n");
-	puts(L"kernel_arg3 = 0x");
-	puth(kernel_arg3, 16);
-	puts(L"\r\n");
-	puts(L"stack_base = 0x");
-	puth(stack_base, 16);
-	puts(L"\r\n");
+	put_param(L"kernel_arg3", kernel_arg3);
 
 	exit_boot_services(ImageHandle);
 
