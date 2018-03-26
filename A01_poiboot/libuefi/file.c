@@ -22,9 +22,9 @@ unsigned long long get_file_size(struct EFI_FILE_PROTOCOL *file)
 	return fi_ptr->FileSize;
 }
 
-void safety_file_read(struct EFI_FILE_PROTOCOL *src, void *dst)
+void safety_file_read(struct EFI_FILE_PROTOCOL *src, void *dst,
+		      long long size)
 {
-	long long size = get_file_size(src);
 	unsigned char *d = dst;
 
 	while (size > 0) {

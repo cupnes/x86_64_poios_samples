@@ -103,6 +103,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	puts(L"loaded kernel(last 16 bytes): ");
 	put_n_bytes(last, 16);
 
+
 	/* load the applications */
 	status = root->Open(
 		root, &file_apps, APPS_FILE_NAME, EFI_FILE_MODE_READ, 0);
@@ -112,7 +113,8 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	}
 
 	if (has_apps) {
-		safety_file_read(file_apps, (void *)apps_start);
+		long long size = get_file_size(file_apps);
+		safety_file_read(file_apps, (void *)apps_start, size);
 
 		puts(L"loaded apps(first 8 bytes): ");
 		p = (unsigned char *)apps_start;

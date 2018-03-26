@@ -17,6 +17,7 @@ struct FILE {
 extern struct FILE file_list[MAX_FILE_NUM];
 
 unsigned long long get_file_size(struct EFI_FILE_PROTOCOL *file);
-void safety_file_read(struct EFI_FILE_PROTOCOL *src, void *dst);
+void safety_file_read(struct EFI_FILE_PROTOCOL *src, void *dst,
+		      long long size);
 
 #endif
