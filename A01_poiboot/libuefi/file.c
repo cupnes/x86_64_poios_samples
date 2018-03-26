@@ -36,8 +36,10 @@ void safety_file_read(struct EFI_FILE_PROTOCOL *src, void *dst,
 		size -= unit;
 	}
 
-	if (size > 0) {
-		status = src->Read(src, &size, (void *)d);
+	while (size > 0) {
+		unsigned long long tmp_size = size;
+		status = src->Read(src, &tmp_size, (void *)d);
 		assert(status, L"safety_read");
+		size -= tmp_size;
 	}
 }
