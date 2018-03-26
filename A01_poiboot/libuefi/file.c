@@ -23,15 +23,21 @@ unsigned long long get_file_size(struct EFI_FILE_PROTOCOL *file)
 }
 
 void safety_file_read(struct EFI_FILE_PROTOCOL *src, void *dst,
-		      long long size)
+		      unsigned long long size)
 {
-	unsigned char *d = dst;
+	unsigned long long status;
 
-	while (size > 0) {
+	unsigned char *d = dst;
+	while (size > SAFETY_READ_UNIT) {
 		unsigned long long unit = SAFETY_READ_UNIT;
-		unsigned long long status = src->Read(src, &unit, (void *)d);
+		status = src->Read(src, &unit, (void *)d);
 		assert(status, L"safety_read");
 		d += unit;
 		size -= unit;
+	}
+
+	if (size > 0) {
+		status = src->Read(src, &size, (void *)d);
+		assert(status, L"safety_read");
 	}
 }

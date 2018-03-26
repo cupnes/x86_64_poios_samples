@@ -23,7 +23,6 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	unsigned long long kernel_start;
 	unsigned long long stack_base;
 	unsigned long long apps_start;
-	unsigned long long kernel_size;
 	unsigned char *p;
 	unsigned int i;
 	unsigned long long kernel_arg1;
@@ -62,11 +61,10 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 		root, &file_kernel, KERNEL_FILE_NAME, EFI_FILE_MODE_READ, 0);
 	assert(status, L"root->Open(kernel)");
 
-	kernel_size = get_file_size(file_kernel);
+	unsigned long long kernel_size = get_file_size(file_kernel);
 	puts(L"kernel_size=");
 	puth(kernel_size, 16);
 	puts(L"\r\n");
-	unsigned long long tmp_kernel_size = kernel_size;
 
 	struct header {
 		void *bss_start;
@@ -77,9 +75,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	assert(status, L"file_kernel->Read(head)");
 
 	kernel_size -= sizeof(head);
-	tmp_kernel_size -= sizeof(head);
-	status = file_kernel->Read(file_kernel, &kernel_size,
-				   (void *)kernel_start);
+	safety_file_read(file_kernel, (void *)kernel_start, kernel_size);
 	assert(status, L"file_kernel->Read(body)");
 
 	ST->BootServices->SetMem(head.bss_start, head.bss_size, 0);
@@ -94,15 +90,6 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 	file_kernel->Close(file_kernel);
 
-	unsigned char *last = (unsigned char *)(
-		(unsigned long long)kernel_start + tmp_kernel_size - 16);
-	puts(L"last kernel addr: ");
-	puth((unsigned long long)last, 16);
-	puts(L"\r\n");
-
-	puts(L"loaded kernel(last 16 bytes): ");
-	put_n_bytes(last, 16);
-
 
 	/* load the applications */
 	status = root->Open(
@@ -113,8 +100,8 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	}
 
 	if (has_apps) {
-		long long size = get_file_size(file_apps);
-		safety_file_read(file_apps, (void *)apps_start, size);
+		unsigned long long apps_size = get_file_size(file_apps);
+		safety_file_read(file_apps, (void *)apps_start, apps_size);
 
 		puts(L"loaded apps(first 8 bytes): ");
 		p = (unsigned char *)apps_start;
