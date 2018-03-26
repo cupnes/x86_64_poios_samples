@@ -48,7 +48,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 		char apps_start[17];
 	} conf;
 	unsigned long long conf_size = sizeof(conf);
-	status = file_conf->Read(file_conf, &conf_size, (void *)&conf);
+	safety_file_read(file_conf, (void *)&conf, conf_size);
 	kernel_start = hexstrtoull(conf.kernel_start);
 	stack_base = kernel_start + (1 * MB);	/* stack_baseはスタックの底のアドレス(上へ伸びる) */
 	apps_start = hexstrtoull(conf.apps_start);
