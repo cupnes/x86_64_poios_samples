@@ -71,12 +71,10 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 		unsigned long long bss_size;
 	} head;
 	unsigned long long head_size = sizeof(head);
-	status = file_kernel->Read(file_kernel, &head_size, (void *)&head);
-	assert(status, L"file_kernel->Read(head)");
+	safety_file_read(file_kernel, (void *)&head, head_size);
 
 	kernel_size -= sizeof(head);
 	safety_file_read(file_kernel, (void *)kernel_start, kernel_size);
-	assert(status, L"file_kernel->Read(body)");
 
 	ST->BootServices->SetMem(head.bss_start, head.bss_size, 0);
 
