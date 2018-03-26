@@ -11,10 +11,7 @@
 
 #define MB		1048576	/* 1024 * 1024 */
 
-#define READ_UNIT	16384	/* 16KB */
-
 void put_n_bytes(unsigned char *addr, unsigned int num);
-void safety_read(struct EFI_FILE_PROTOCOL *src, void *dst);
 
 void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -129,7 +126,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 		/* status = file_apps->Read(file_apps, &apps_size, (void *)apps_start); */
 		/* assert(status, L"file_apps->Read"); */
 
-		safety_read(file_apps, (void *)apps_start);
+		safety_file_read(file_apps, (void *)apps_start);
 
 		puts(L"A: ");
 		puth(apps_size, 16);
@@ -233,18 +230,4 @@ void put_n_bytes(unsigned char *addr, unsigned int num)
 		putc(L' ');
 	}
 	puts(L"\r\n");
-}
-
-void safety_read(struct EFI_FILE_PROTOCOL *src, void *dst)
-{
-	long long size = get_file_size(src);
-	unsigned char *d = dst;
-
-	while (size > 0) {
-		unsigned long long unit = READ_UNIT;
-		unsigned long long status = src->Read(src, &unit, (void *)d);
-		assert(status, L"safety_read");
-		d += unit;
-		size -= unit;
-	}
 }
