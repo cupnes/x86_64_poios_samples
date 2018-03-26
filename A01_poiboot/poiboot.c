@@ -12,6 +12,7 @@
 #define MB		1048576	/* 1024 * 1024 */
 
 void put_n_bytes(unsigned char *addr, unsigned int num);
+void put_param(unsigned short *name, unsigned long long val);
 
 void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -20,9 +21,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	struct EFI_FILE_PROTOCOL *file_conf;
 	struct EFI_FILE_PROTOCOL *file_kernel;
 	struct EFI_FILE_PROTOCOL *file_apps;
-	unsigned long long kernel_start;
-	unsigned long long stack_base;
-	unsigned long long apps_start;
+
 	unsigned char *p;
 	unsigned int i;
 	unsigned long long kernel_arg1;
@@ -47,13 +46,22 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 		char kernel_start[17];
 		char apps_start[17];
 	} conf;
-	unsigned long long conf_size = sizeof(conf);
-	safety_file_read(file_conf, (void *)&conf, conf_size);
-	kernel_start = hexstrtoull(conf.kernel_start);
-	stack_base = kernel_start + (1 * MB);	/* stack_baseはスタックの底のアドレス(上へ伸びる) */
-	apps_start = hexstrtoull(conf.apps_start);
 
+	unsigned long long conf_size = sizeof(conf);
+	put_param(L"conf_size", conf_size);
+
+	puts(L"load conf ... ");
+	safety_file_read(file_conf, (void *)&conf, conf_size);
+	puts(L"done\r\n");
 	file_conf->Close(file_conf);
+
+	unsigned long long kernel_start = hexstrtoull(conf.kernel_start);
+	put_param(L"kernel_start", kernel_start);
+	unsigned long long stack_base = kernel_start + (1 * MB);
+			/* stack_baseはスタックの底のアドレス(上へ伸びる) */
+	put_param(L"stack_base", stack_base);
+	unsigned long long apps_start = hexstrtoull(conf.apps_start);
+	put_param(L"apps_start", apps_start);
 
 
 	/* load the kernel */
@@ -71,10 +79,12 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 		unsigned long long bss_size;
 	} head;
 	unsigned long long head_size = sizeof(head);
+	puts(L"load kernel ... ");
 	safety_file_read(file_kernel, (void *)&head, head_size);
 
 	kernel_size -= sizeof(head);
 	safety_file_read(file_kernel, (void *)kernel_start, kernel_size);
+	puts(L"done\r\n");
 
 	ST->BootServices->SetMem(head.bss_start, head.bss_size, 0);
 
@@ -99,17 +109,14 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 
 	if (has_apps) {
 		unsigned long long apps_size = get_file_size(file_apps);
+		puts(L"load apps ... ");
 		safety_file_read(file_apps, (void *)apps_start, apps_size);
-
-		puts(L"loaded apps(first 8 bytes): ");
-		p = (unsigned char *)apps_start;
-		for (i = 0; i < 8; i++) {
-			puth(*p++, 2);
-			putc(L' ');
-		}
-		puts(L"\r\n");
-
+		puts(L"done\r\n");
 		file_apps->Close(file_apps);
+
+		puts(L"loaded apps(first 16 bytes): ");
+		put_n_bytes((unsigned char *)apps_start, 16);
+		puts(L"\r\n");
 	}
 
 
@@ -155,5 +162,12 @@ void put_n_bytes(unsigned char *addr, unsigned int num)
 		puth(*addr++, 2);
 		putc(L' ');
 	}
+}
+
+void put_param(unsigned short *name, unsigned long long val)
+{
+	puts(name);
+	puts(L": 0x");
+	puth(val, 16);
 	puts(L"\r\n");
 }
