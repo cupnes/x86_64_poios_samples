@@ -24,7 +24,6 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	unsigned long long stack_base;
 	unsigned long long apps_start;
 	unsigned long long kernel_size;
-	unsigned long long apps_size;
 	unsigned char *p;
 	unsigned int i;
 	unsigned long long kernel_arg1;
@@ -113,31 +112,7 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	}
 
 	if (has_apps) {
-		root->Flush(root);
-		file_apps->Flush(file_apps);
-
-		apps_size = get_file_size(file_apps);
-
-		puts(L"apps_size=");
-		puth(apps_size, 16);
-		puts(L"\r\n");
-		unsigned long long tmp_apps_size = apps_size;
-
-		/* status = file_apps->Read(file_apps, &apps_size, (void *)apps_start); */
-		/* assert(status, L"file_apps->Read"); */
-
 		safety_file_read(file_apps, (void *)apps_start);
-
-		puts(L"A: ");
-		puth(apps_size, 16);
-		puts(L", ");
-		puth(tmp_apps_size, 16);
-		puts(L"\r\n");
-
-		/* if (apps_size < tmp_apps_size) { */
-		/* 	puts(L"don't finished to read apps.img.\r\n"); */
-		/* 	while (1); */
-		/* } */
 
 		puts(L"loaded apps(first 8 bytes): ");
 		p = (unsigned char *)apps_start;
@@ -148,16 +123,6 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 		puts(L"\r\n");
 
 		file_apps->Close(file_apps);
-
-		puts(L"tmp_apps_size=");
-		puth(tmp_apps_size, 16);
-		puts(L"\r\n");
-		unsigned char *alb = (unsigned char *)(apps_start + tmp_apps_size - 1);
-		puts(L"loaded last byte");
-		puth((unsigned long long)alb, 16);
-		puts(L": ");
-		puth(*alb, 2);
-		puts(L"\r\n");
 	}
 
 
@@ -181,32 +146,6 @@ void efi_main(void *ImageHandle, struct EFI_SYSTEM_TABLE *SystemTable)
 	puts(L"stack_base = 0x");
 	puth(stack_base, 16);
 	puts(L"\r\n");
-
-	if (has_apps == TRUE) {
-		struct file {
-			char name[28];
-			unsigned int size;
-			unsigned char data[0];
-		} *f = (struct file *)apps_start;
-		int num;
-		for (num = 0; f->name[0] != 0x00; num++) {
-			if (num > 5)
-				break;
-			puth((unsigned long long)f, 16);
-			puts(L"\r\n");
-			puts(L"name=");
-			put_n_bytes((unsigned char *)f->name, 16);
-			puts(L"size=");
-			puth(f->size, 16);
-			puts(L"\r\n");
-			puts(L"data(B)=");
-			put_n_bytes(f->data, 16);
-			f = (struct file *)(
-				(unsigned long long)f->data + f->size);
-			puts(L"data(E)=");
-			put_n_bytes((unsigned char *)((unsigned long long)f - 16), 16);
-		}
-	}
 
 	exit_boot_services(ImageHandle);
 
