@@ -29,7 +29,7 @@ unsigned long long get_files(struct file *files[])
 	struct file *f = fs_start;
 	unsigned int num;
 
-	for (num = 0; f->name[0]; num++) {
+	for (num = 0; f->name[0] != END_OF_FS; num++) {
 		files[num] = f;
 		f = (struct file *)((unsigned long long)f + sizeof(struct file)
 				    + f->size);

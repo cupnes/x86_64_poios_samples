@@ -1,8 +1,6 @@
 #include <intr.h>
 #include <x86.h>
 
-#include <fbcon.h>
-
 #define DESC_TYPE_INTR	14
 
 struct interrupt_descriptor idt[MAX_INTR_NO];
@@ -29,10 +27,4 @@ void intr_init(void)
 	idtr[0] = ((unsigned long long)idt << 16) | (sizeof(idt) - 1);
 	idtr[1] = ((unsigned long long)idt >> 48);
 	__asm__ ("lidt idtr");
-}
-
-void do_default_interrupt(void)
-{
-	puts("UNEXPECTED EXCEPTION OR INTERRUPT.\r\n");
-	while (1);
 }
