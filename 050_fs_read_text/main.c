@@ -25,7 +25,7 @@ void start_kernel(void *_t __attribute__ ((unused)), struct framebuffer *_fb,
 	/* CPUの割り込み有効化 */
 	enable_cpu_intr();
 
-	/* apps.img(テキストファイル)を読む */
+	/* fs.img(テキストファイル)を読む */
 	char *hello_str = (char *)_fs_start;
 	puts(hello_str);
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FILE_NAME_LEN=28
-FS_IMG_NAME='apps.img'
+FS_IMG_NAME='fs.img'
 
 while [ -n "$1" ]; do
 	# ヘッダ作成
@@ -30,7 +30,7 @@ while [ -n "$1" ]; do
 
 	# 位置変数をシフト
 	shift
-done > ${FS_IMG_NAME}	# whileループ内の出力はapps.imgへ出力
+done > ${FS_IMG_NAME}	# whileループ内の出力はfs.imgへ出力
 
-# ファイルシステムの終わり(0x00)をapps.imgへ追記
+# ファイルシステムの終わり(0x00)をfs.imgへ追記
 echo -ne "\x00" >> ${FS_IMG_NAME}

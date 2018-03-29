@@ -7,7 +7,7 @@
 #define CONF_FILE_NAME	L"poiboot.conf"
 
 #define KERNEL_FILE_NAME	L"kernel.bin"
-#define APPS_FILE_NAME	L"apps.img"
+#define APPS_FILE_NAME	L"fs.img"
 
 #define MB		1048576	/* 1024 * 1024 */
 
